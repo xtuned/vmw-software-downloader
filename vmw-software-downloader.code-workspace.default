@@ -1,0 +1,58 @@
+{
+    "folders": [
+        {
+            "path": ".",
+            "name": "Root"
+        },
+        {
+            "path": "vmw",
+            "name": "vmw"
+        }
+    ],
+    "settings": {
+        "python.analysis.extraPaths": [
+            "../zpodapi/src", // Allow vscode to see zpodapi modules
+        ],
+        "[python]": {
+            "editor.codeActionsOnSave": {
+                "source.organizeImports": true
+            }
+        },
+        "python.linting.enabled": true,
+        "python.linting.flake8Enabled": true,
+        "python.linting.flake8Path": "flake8",
+        "python.formatting.provider": "black",
+        "editor.formatOnSave": true,
+        "files.exclude": {
+            "**/.DS_Store": true,
+            "**/.git": true,
+            "**/.hg": true,
+            "**/.svn": true,
+            "**/CVS": true,
+            "**/Thumbs.db": true,
+            "**/.venv": true,
+            "zpodapi": true, // Hide zpodapi from Workspace Root folder,
+            "zpodcli": true, // Hide zpodcli from Workspace Root folder,
+            "zpodsdk": true, // Hide zpodsdk from Workspace Root folder,
+        },
+        "isort.args": [
+            "--profile",
+            "black",
+            "--line-length",
+            "88",
+            "--project",
+            "zpodapi,",
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "ms-vscode-remote.remote-ssh",
+            "ms-vscode-remote.vscode-remote-extensionpack",
+            "ms-vscode.remote-explorer",
+            "skellock.just",
+            "sourcery.sourcery",
+        ]
+    }
+}

@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "vmw-software-downloader"
+version = "0.1.0"
+description = "Script to download VMware Software Products"
+authors = ["Your Name <you@example.com>"]
+license = "n"
+readme = "README.md"
+packages = [{include = "vmw_software_downloader"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^1.10.4"
+docker = "^6.0.1"
+rich = "^13.0.1"
+python-dotenv = "^0.21.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
