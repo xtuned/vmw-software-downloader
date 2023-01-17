@@ -5,29 +5,23 @@ import docker
 import signal
 import asyncio
 from os import path, makedirs, rename, stat, getenv
-import time
 import hashlib
 from pydantic import BaseModel
 from rich.console import Console
 from typing import Optional
 from dotenv import load_dotenv
-from concurrent.futures import Future
 from threading import Event
-from asyncio import Queue
 
 from rich.progress import (
     BarColumn,
     Progress,
-    TimeRemainingColumn,
-    TimeElapsedColumn,
-    TaskID
+    TimeElapsedColumn
 )
 
 progress = Progress(
     "[progress.description]{task.description}",
     BarColumn(),
     "[progress.percentage]{task.percentage:>3.0f}%",
-    TimeRemainingColumn(),
     TimeElapsedColumn()
 )
 
@@ -37,6 +31,8 @@ download_username = getenv('USERNAME')
 download_password = getenv('PASSWORD')
 download_container_image = getenv("CONTAINER_IMAGE")
 zpod_files_path = getenv("BASE_DIR")
+
+
 client = docker.from_env()
 console = Console()
 
@@ -66,7 +62,7 @@ def handle_sigint(signum, frame):
 signal.signal(signal.SIGINT, handle_sigint)
 
 
-def convert_to_byte(download: ComponentDownload):
+async def convert_to_byte(download: ComponentDownload):
     size = float(download.component_download_filesize.split(" ")[0])
     unit = download.component_download_filesize.split(" ")[1].upper()
     return size * (byte_size ** powers[unit])
@@ -75,10 +71,9 @@ def convert_to_byte(download: ComponentDownload):
 # def convert_from_byte(filesize: int, unit: str):
 #     return filesize / (byte_size ** powers[unit])
 
-def get_checksum(download: ComponentDownload):
+async def get_checksum(download: ComponentDownload):
     checksum_engine = download.component_download_checksum.split(":")[0]
-    base_dir = getenv("BASE_DIR")
-    file_path = path.join(base_dir, "logs", f"{download.component_download_filename}.log")
+    file_path = path.join(zpod_files_path, "logs", f"{download.component_download_filename}.log")
     with open(file_path, "r") as f:
         content = f.read()
         try:
@@ -88,12 +83,12 @@ def get_checksum(download: ComponentDownload):
             return ""
 
 
-def verify_checksum(download: ComponentDownload):
-    console.print(f"Verifying the checksum...", style="green")
+async def verify_checksum(download: ComponentDownload):
+    # console.print(f"Verifying the checksum...", style="green")
     checksum_engine = download.component_download_checksum.split(":")[0]
     expected_checksum = download.component_download_checksum.split(":")[1]
-    base_dir = getenv("BASE_DIR")
-    file_path = path.join(base_dir, download.component_download_filename)
+    file_path = path.join(zpod_files_path, download.component_name, download.component_version,
+                          download.component_download_filename)
     with open(file_path, "rb") as f:
         bytes_read = f.read()
         match checksum_engine:
@@ -104,24 +99,23 @@ def verify_checksum(download: ComponentDownload):
             case "sha1":
                 checksum = hashlib.sha256(bytes_read).hexdigest()
         checksum_result = checksum
-        if checksum_result == expected_checksum:
-            return True
-        return False
+        if not checksum_result == expected_checksum:
+            return False
+        return True
 
 
 async def check_download_progress(download: ComponentDownload):
-    base_dir = getenv("BASE_DIR")
-    file_path = path.join(base_dir, download.component_download_filename)
+    file_path = path.join(zpod_files_path, download.component_download_filename)
     file_exist = False
     console.print("Waiting for download to begin ...\n", style="green")
     while file_exist is not True:
         await asyncio.sleep(.5)
         # time.sleep(1)
         file_exist = path.exists(file_path)
-    expected_size = round(convert_to_byte(download))
+    expected_size = round(await convert_to_byte(download))
 
     with progress:
-        task_id = progress.add_task(f"[green]{download.component_download_filename}",total=100)
+        task_id = progress.add_task(f"[green]{download.component_download_filename}", total=100)
         while not progress.finished:
             current_size = stat(file_path).st_size
             pct = round((100 * current_size / expected_size))
@@ -129,10 +123,14 @@ async def check_download_progress(download: ComponentDownload):
             progress.update(task_id, completed=pct)
             await asyncio.sleep(.2)
 
-    progress.console.log(f"Downloaded {download.component_download_filename}\n", style="green")
-    if verify_checksum(download):
-        rename_downloaded_file(download)
-    return True
+    progress.console.log(f"{download.component_download_filename} downloaded \n", style="green")
+    await rename_downloaded_file(download)
+    if await check_if_file_exists(download):
+        return True
+    else:
+        console.print(f"Something went wrong retry downloading the {download.component_download_filename}",
+                      style="red on white")
+        return False
 
 
 async def run_docker(download: ComponentDownload):
@@ -173,11 +171,20 @@ async def run_docker(download: ComponentDownload):
         sys.exit()
 
 
-def rename_downloaded_file(download: ComponentDownload):
-    src_file = path.join(getenv("BASE_DIR"), download.component_download_filename)
-    dst_file = path.join(getenv("BASE_DIR"), download.component_name, download.component_version,
+async def check_if_file_exists(download: ComponentDownload):
+    file = path.join(zpod_files_path, download.component_name, download.component_version,
+                     download.component_download_filename)
+    if not path.isfile(file):
+        return False
+    await verify_checksum(download)
+    return True
+
+
+async def rename_downloaded_file(download: ComponentDownload):
+    src_file = path.join(zpod_files_path, download.component_download_filename)
+    dst_file = path.join(zpod_files_path, download.component_name, download.component_version,
                          download.component_download_filename)
-    makedirs(path.join(getenv("BASE_DIR"), download.component_name, download.component_version), mode=0o775,
+    makedirs(path.join(zpod_files_path, download.component_name, download.component_version), mode=0o775,
              exist_ok=True)
     console.print(f"Renaming {download.component_download_filename}")
     rename(src_file, dst_file)
@@ -187,5 +194,9 @@ def rename_downloaded_file(download: ComponentDownload):
 
 
 async def download_file(download: ComponentDownload):
+    if await check_if_file_exists(download):
+        console.print(f"[magenta]{download.component_download_filename} [blue]already exists")
+        return
     await run_docker(download=download)
     await check_download_progress(download=download)
+    return True
