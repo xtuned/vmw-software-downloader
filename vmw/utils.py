@@ -3,7 +3,7 @@ import json
 import sys
 import docker
 import asyncio
-from os import path, makedirs, rename, stat, getenv
+from os import path, makedirs, rename, stat, getenv,walk
 import hashlib
 from pydantic import BaseModel
 from rich.console import Console
@@ -22,7 +22,6 @@ progress = Progress(
     "[progress.percentage]{task.percentage:>3.0f}%",
     TimeElapsedColumn()
 )
-
 
 # load env
 load_dotenv()
@@ -205,3 +204,17 @@ async def download_file(download: ComponentDownload):
         return
     await check_download_progress(download=download)
     return True
+
+
+def read_json_files():
+    base_dir = path.join(zpod_files_path, "zPodLibrary/official")
+    json_files = []
+    for subdir, dirs, files in walk(base_dir):
+        for file in files:
+            if file.endswith('.json'):
+                json_files.append(path.join(subdir, file))
+    json_contents = []
+    for json_file in json_files:
+        with open(json_file) as f:
+            json_contents.append(json.load(f))
+    return json_contents
