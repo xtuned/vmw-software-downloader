@@ -1,52 +1,26 @@
 DOWNLOAD_REQUEST = [
     {
-        "component_download_name": "vmware_vsphere",
-        # "component_download_release": "6_7",
-        "component_download_filename": "bitfusion-client-ubuntu2204_4.5.2-16_amd64.deb",
-        "component_download_filesize": "27.38 MB",
-        # "component_download_group": "VSPP_VCD10222",
-        "component_download_checksum": "md5:b2d8a3ed5ecfb17d5ac7bf775a5347d0",
-        "component_name": "vmware_vsphere",
-        "component_version": "12.1.5"
+        "component_name": "vcd",
+        "component_version": "10.2.2.1a",
+        "component_type": "vcd",
+        "component_description": "VMware Cloud Director",
+        "component_url": "https://www.vmware.com/products/vcloud-director.html",
+        "component_download_category": "vmware_cloud_director/10_2",
+        "component_download_group": "VSPP_VCD10223",
+        "component_download_ova": "VMware_Cloud_Director-10.2.2.6756-18686837_OVF10.ova",
+        "component_download_ova_checksum": "sha256:2778d0b06df6359a4b305da7a953e588c9f984f549fb343d836a27bc3128066b",
+        "component_download_ova_size": "1.17 GB"
     },
     {
-        "component_download_name": "vmware_vsphere",
-        # "component_download_release": "6_7",
-        "component_download_filename": "gueststore-vmtools-12.1.5-20735119-20735876.tar.gz",
-        "component_download_filesize": "105.22 MB",
-        # "component_download_group": "VSPP_VCD10222",
-        "component_download_checksum": "md5:589430e75e77eafefea5e24d4ed5d151",
-        "component_name": "vmware_vsphere",
-        "component_version": "12.1.5"
-    },
-    {
-        "component_download_name": "vmware_nsx_t_data_center",
-        # "component_download_release": "6_7",
-        "component_download_filename": "nsx-lcp-3.2.2.0.0.20737187-linux64-focal_amd64.tar.gz",
-        "component_download_filesize": "106.76 MB",
-        # "component_download_group": "VSPP_VCD10222",
-        "component_download_checksum": "md5:c991924d40cbdec589e262ee382a71c0",
-        "component_name": "vmware_nsx_t_data_center",
-        "component_version": "3.2.2"
-    },
-    {
-        "component_download_name": "vmware_vrealize_automation",
-        "component_download_release": "8_7",
-        "component_download_filename": "HW-154129-Appliance-3.3.6.zip",
-        "component_download_filesize": "164.77 MB",
-        "component_download_group": "VIDM_ONPREM_3360",
-        "component_download_checksum": "md5:78971534df6e2640fd36909c5bcd7a46",
-        "component_name": "vmware_vrealize_automation",
-        "component_version": "3.3.6"
-    },
-    {
-        "component_download_name": "vmware_workspace_one",
-        "component_download_release": "1_0",
-        "component_download_filename": "VMware-DEM-Enterprise-2209-10.7-GA.zip",
-        "component_download_filesize": "36.45 MB",
-        "component_download_group": "HCS-MA-2210",
-        "component_download_checksum": "md5:5746e7b40fe6a96ddb042ff44b6971ac",
-        "component_name": "vmware_workspace_one",
-        "component_version": "2209"
-    },
+        "component_name": "vcda",
+        "component_version": "4.4.1",
+        "component_type": "vcda",
+        "component_description": "VMware Cloud Director Availability",
+        "component_url": "https://www.vmware.com/products/cloud-director-availability.html",
+        "component_download_category": "vmware_cloud_director_availability/4_4",
+        "component_download_group": "VCDA_441",
+        "component_download_ova": "VMware-Cloud-Director-Availability-Provider-4.4.1.4448762-b80bae6591_OVF10.ova",
+        "component_download_ova_checksum": "sha256:ffdd0b99d060c60a3b51f313c1332c3215f9c7a4528ef0763bc45fd3c5287f24",
+        "component_download_ova_size": "372.67 MB"
+    }
 ]
