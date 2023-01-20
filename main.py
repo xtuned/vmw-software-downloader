@@ -1,11 +1,12 @@
 import asyncio
 from vmw import utils
 from constants import DOWNLOAD_REQUEST
-
+import json
 
 async def main():
-    # download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
-    download_requests = utils.read_json_files()
+    downloads = utils.read_json_files()
+    download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
+   
     tasks = [asyncio.create_task(utils.download_file(download)) for download in download_requests]
     for task in asyncio.as_completed(tasks):
         await task

@@ -112,6 +112,7 @@ async def check_download_progress(download: ComponentDownload):
     progress.console.log(f"{download.component_download_ova} downloaded \n", style="green")
     await rename_downloaded_file(download)
     if await check_if_file_exists(download):
+        await verify_checksum(download)
         return True
     else:
         console.print(f"Something went wrong retry downloading the {download.component_download_ova}",
@@ -131,6 +132,7 @@ async def run_docker(download: ComponentDownload):
             cmd_options = f"{download.component_download_category} {download.component_download_group}"
         else:
             cmd_options = f"{download.component_download_category}"
+        console.print(cmd_options,style="blue")
         entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
         console.print("launching container ...", style="green")
         container = client.containers.run(image=download_container_image,
@@ -158,7 +160,7 @@ async def check_if_file_exists(download: ComponentDownload):
                      download.component_download_ova)
     if not path.isfile(file):
         return False
-    await verify_checksum(download)
+    # await verify_checksum(download)
     return True
 
 
@@ -190,7 +192,7 @@ async def check_for_cache_error(download: ComponentDownload):
                     with open(error_file, "w") as f:
                         pass
                 with open(error_file, "a") as f:
-                    f.writelines("\n".join([download.component_download_ova]))
+                    f.writelines([f"{download.component_download_ova}\n"])
                 return True
 
 
@@ -207,7 +209,7 @@ async def download_file(download: ComponentDownload):
 
 
 def read_json_files():
-    base_dir = path.join(zpod_files_path, "zPodLibrary/official")
+    base_dir = path.join(zpod_files_path, "../zPodLibrary/official")
     json_files = []
     for subdir, dirs, files in walk(base_dir):
         for file in files:
