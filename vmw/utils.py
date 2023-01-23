@@ -196,17 +196,21 @@ async def check_for_cache_error(download: ComponentDownload):
                 return True
 
 
-async def download_file(download: ComponentDownload):
-    await remove_log_file()
-    if await check_if_file_exists(download):
-        console.print(f"[magenta]{download.component_download_ova} [blue]already exists")
-        return
-    await run_docker(download=download)
-    if await check_for_cache_error(download):
-        console.print(f"[magenta]{download.component_download_ova} [red]failed to download retry again")
-        return
-    await check_download_progress(download=download)
-    return True
+async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphore):
+    async with semaphore:
+        await remove_log_file()
+        if await check_if_file_exists(download):
+            console.print(f"[magenta]{download.component_download_ova} [blue]already exists")
+            return
+        if semaphore.locked():
+            console.print("Process limit is exceeded,waiting...",style="green")
+            await asyncio.sleep(0.5)
+        await run_docker(download=download)
+        if await check_for_cache_error(download):
+            console.print(f"[magenta]{download.component_download_ova} [red]failed to download retry again")
+            return
+        await check_download_progress(download=download)
+        return True
         
 
 
