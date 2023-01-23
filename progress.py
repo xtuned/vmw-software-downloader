@@ -5,7 +5,10 @@ from constants import DOWNLOAD_REQUEST
 
 
 def main():
-    download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
+    # download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
+    downloads = utils.read_json_files()
+    download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
+
     with utils.progress as progress:
         with multiprocessing.Manager() as manager:
             status = manager.dict()
@@ -13,7 +16,7 @@ def main():
             with ProcessPoolExecutor() as executor:
                 futures = []
                 for download in download_requests:
-                    task_id = progress.add_task(f"{download.component_download_ova}", visible=False)
+                    task_id = progress.add_task(f"[yellow]{download.component_download_ova}", visible=False)
                     future = executor.submit(utils.show_progress, download, task_id, status)
                     futures.append(future)
                 while (task_finished := sum([future.done() for future in futures])) < len(futures):

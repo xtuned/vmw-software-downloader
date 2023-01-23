@@ -132,8 +132,8 @@ async def run_docker(download: ComponentDownload):
             cmd_options = f"{download.component_download_category} {download.component_download_group}"
         else:
             cmd_options = f"{download.component_download_category}"
-        console.print(cmd_options, style="blue")
-        entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
+        
+        entrypoint = f"/bin/sh -c 'vmw-cli clear && vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
         console.print("launching container ...", style="green")
         container = client.containers.run(image=download_container_image,
                                           detach=True,
@@ -141,7 +141,7 @@ async def run_docker(download: ComponentDownload):
                                           entrypoint=entrypoint,
                                           volumes=[f"{zpod_files_path}:/files"],
                                           environment=[f"VMWUSER={download_username}", f"VMWPASS={download_password}"],
-                                          auto_remove=True,
+                                        #   auto_remove=True,
                                           )
         console.print(f"container {container.id[:10]} launched successfully", style="green")
     except docker.errors.ContainerError:
@@ -196,8 +196,7 @@ async def check_for_cache_error(download: ComponentDownload):
                 return True
 
 
-async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphore):
-    await semaphore.acquire()
+async def download_file(download: ComponentDownload):
     await remove_log_file()
     if await check_if_file_exists(download):
         console.print(f"[magenta]{download.component_download_ova} [blue]already exists")
@@ -207,8 +206,8 @@ async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphor
         console.print(f"[magenta]{download.component_download_ova} [red]failed to download retry again")
         return
     await check_download_progress(download=download)
-    semaphore.release()
     return True
+        
 
 
 def read_json_files():
