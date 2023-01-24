@@ -57,14 +57,14 @@ class ComponentDownload(BaseModel):
 
 
 def convert_to_byte(download: ComponentDownload):
-    size = float(download.component_download_ova_size.split(" ")[0])
-    unit = download.component_download_ova_size.split(" ")[1].upper()
+    size = float(download.component_download_file_size.split(" ")[0])
+    unit = download.component_download_file_size.split(" ")[1].upper()
     return size * (byte_size ** powers[unit])
 
 
 async def get_checksum(download: ComponentDownload):
-    checksum_engine = download.component_download_ova_checksum.split(":")[0]
-    file_path = os.path.join(zpod_files_path, "logs", f"{download.component_download_ova}.log")
+    checksum_engine = download.component_download_file_checksum.split(":")[0]
+    file_path = os.path.join(zpod_files_path, "logs", f"{download.component_download_file}.log")
     with open(file_path, "r") as f:
         content = f.read()
         try:
@@ -76,10 +76,10 @@ async def get_checksum(download: ComponentDownload):
 
 async def verify_checksum(download: ComponentDownload):
     # console.print(f"Verifying the checksum...", style="green")
-    checksum_engine = download.component_download_ova_checksum.split(":")[0]
-    expected_checksum = download.component_download_ova_checksum.split(":")[1]
+    checksum_engine = download.component_download_file_checksum.split(":")[0]
+    expected_checksum = download.component_download_file_checksum.split(":")[1]
     file_path = os.path.join(zpod_files_path, download.component_name, download.component_version,
-                             download.component_download_ova)
+                             download.component_download_file)
     with open(file_path, "rb") as f:
         bytes_read = f.read()
         match checksum_engine:
@@ -101,10 +101,10 @@ async def wait_for_file(filename: str):
 
 
 async def check_download_progress(download: ComponentDownload):
-    file_path = os.path.join(zpod_files_path, download.component_download_ova)
+    file_path = os.path.join(zpod_files_path, download.component_download_file)
     console.print("Waiting for download to begin ...\n", style="green")
     await wait_for_file(file_path)
-    console.print(f"{download.component_download_ova} download has started...\n", style="green")
+    console.print(f"{download.component_download_file} download has started...\n", style="green")
     expected_size = round(convert_to_byte(download))
     pct = 0
     while pct != 100:
@@ -116,7 +116,7 @@ async def check_download_progress(download: ComponentDownload):
         await verify_checksum(download)
         return True
     else:
-        console.print(f"Something went wrong retry downloading the {download.component_download_ova}",
+        console.print(f"Something went wrong retry downloading the {download.component_download_file}",
                       style="red on white")
         return False
 
@@ -125,14 +125,14 @@ async def run_docker(download: ComponentDownload):
     # ensure the specified volume exists
     os.makedirs(zpod_files_path, mode=0o775, exist_ok=True)
     os.makedirs(os.path.join(zpod_files_path, "logs"), mode=0o775, exist_ok=True)
-    log_file = f"/files/logs/{download.component_download_ova}.log 2>&1"
+    log_file = f"/files/logs/{download.component_download_file}.log 2>&1"
     try:
         if download.component_download_group and download.component_download_category:
             cmd_options = f"{download.component_download_category} {download.component_download_group}"
         else:
             cmd_options = f"{download.component_download_category}"
-        
-        entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
+
+        entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_file} > {log_file}'"
         console.print(entrypoint)
         console.print("launching container ...", style="green")
         container = client.containers.run(image=download_container_image,
@@ -141,7 +141,7 @@ async def run_docker(download: ComponentDownload):
                                           entrypoint=entrypoint,
                                           volumes=[f"{zpod_files_path}:/files"],
                                           environment=[f"VMWUSER={download_username}", f"VMWPASS={download_password}"],
-                                        #   auto_remove=True,
+                                          auto_remove=True,
                                           )
         console.print(f"container {container.id[:10]} launched successfully", style="green")
     except docker.errors.ContainerError:
@@ -157,7 +157,7 @@ async def run_docker(download: ComponentDownload):
 
 async def check_if_file_exists(download: ComponentDownload):
     file = os.path.join(zpod_files_path, download.component_name, download.component_version,
-                        download.component_download_ova)
+                        download.component_download_file)
     if not os.path.isfile(file):
         return False
     # await verify_checksum(download)
@@ -165,20 +165,20 @@ async def check_if_file_exists(download: ComponentDownload):
 
 
 async def rename_downloaded_file(download: ComponentDownload):
-    src_file = os.path.join(zpod_files_path, download.component_download_ova)
+    src_file = os.path.join(zpod_files_path, download.component_download_file)
     dst_file = os.path.join(zpod_files_path, download.component_name, download.component_version,
-                            download.component_download_ova)
+                            download.component_download_file)
     os.makedirs(os.path.join(zpod_files_path, download.component_name, download.component_version), mode=0o775,
                 exist_ok=True)
-    console.print(f"Renaming {download.component_download_ova}")
+    console.print(f"Renaming {download.component_download_file}")
     os.rename(src_file, dst_file)
     # check file
     if os.path.exists(dst_file):
-        console.print(f"File {download.component_download_ova} renamed successfully", style="green")
+        console.print(f"File {download.component_download_file} renamed successfully", style="green")
 
 
 async def check_for_cache_error(download: ComponentDownload):
-    log_file = os.path.join(zpod_files_path, "logs", f"{download.component_download_ova}.log")
+    log_file = os.path.join(zpod_files_path, "logs", f"{download.component_download_file}.log")
     error_file = os.path.join(zpod_files_path, "failed_downloads.txt")
     await wait_for_file(log_file)
     # ensure there is a content to read
@@ -192,7 +192,7 @@ async def check_for_cache_error(download: ComponentDownload):
                     with open(error_file, "w") as f:
                         pass
                 with open(error_file, "a") as f:
-                    f.writelines([f"{download.component_download_ova}\n"])
+                    f.writelines([f"{download.component_download_file}\n"])
                 return True
 
 
@@ -200,18 +200,17 @@ async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphor
     async with semaphore:
         await remove_log_file()
         if await check_if_file_exists(download):
-            console.print(f"[magenta]{download.component_download_ova} [blue]already exists")
+            console.print(f"[magenta]{download.component_download_file} [blue]already exists")
             return
         if semaphore.locked():
-            console.print("Process limit is exceeded,waiting...",style="green")
+            console.print("Process limit is exceeded,waiting...", style="green")
             await asyncio.sleep(0.5)
         await run_docker(download=download)
         if await check_for_cache_error(download):
-            console.print(f"[magenta]{download.component_download_ova} [red]failed to download retry again")
+            console.print(f"[magenta]{download.component_download_file} [red]failed to download retry again")
             return
         await check_download_progress(download=download)
     return True
-        
 
 
 def read_json_files():
@@ -238,7 +237,7 @@ async def remove_log_file():
 
 
 def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
-    file_path = os.path.join(zpod_files_path, download.component_download_ova)
+    file_path = os.path.join(zpod_files_path, download.component_download_file)
     if not os.path.exists(file_path):
         return
     expected_size = round(convert_to_byte(download))
