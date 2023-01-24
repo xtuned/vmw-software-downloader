@@ -5,8 +5,9 @@ from vmw.log import logger
 
 
 async def main():
-    num_proc = asyncio.Semaphore(value=2)
+    num_proc = asyncio.Semaphore(value=3)
     downloads = utils.read_json_files()
+    print(downloads)
     download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
     # download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
     tasks = [asyncio.create_task(utils.download_file(download,num_proc)) for download in download_requests]

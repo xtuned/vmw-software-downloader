@@ -50,9 +50,10 @@ class ComponentDownload(BaseModel):
     component_url: Optional[str]
     component_download_category: str
     component_download_group: Optional[str]
-    component_download_ova: str
-    component_download_ova_checksum: str  # "sha265:checksum"
-    component_download_ova_size: str
+    component_download_file: str
+    component_download_file_checksum: str  # "sha265:checksum"
+    component_download_file_size: str
+    component_download_engine: str
 
 
 def convert_to_byte(download: ComponentDownload):
@@ -124,16 +125,15 @@ async def run_docker(download: ComponentDownload):
     # ensure the specified volume exists
     os.makedirs(zpod_files_path, mode=0o775, exist_ok=True)
     os.makedirs(os.path.join(zpod_files_path, "logs"), mode=0o775, exist_ok=True)
-
     log_file = f"/files/logs/{download.component_download_ova}.log 2>&1"
-
     try:
         if download.component_download_group and download.component_download_category:
             cmd_options = f"{download.component_download_category} {download.component_download_group}"
         else:
             cmd_options = f"{download.component_download_category}"
         
-        entrypoint = f"/bin/sh -c 'vmw-cli clear && vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
+        entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_ova} > {log_file}'"
+        console.print(entrypoint)
         console.print("launching container ...", style="green")
         container = client.containers.run(image=download_container_image,
                                           detach=True,
@@ -210,7 +210,7 @@ async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphor
             console.print(f"[magenta]{download.component_download_ova} [red]failed to download retry again")
             return
         await check_download_progress(download=download)
-        return True
+    return True
         
 
 
