@@ -16,7 +16,7 @@ def main():
             with ProcessPoolExecutor() as executor:
                 futures = []
                 for download in download_requests:
-                    task_id = progress.add_task(f"[yellow]{download.component_download_ova}", visible=False)
+                    task_id = progress.add_task(f"[yellow]{download.component_download_file}", visible=False)
                     future = executor.submit(utils.show_progress, download, task_id, status)
                     futures.append(future)
                 while (task_finished := sum([future.done() for future in futures])) < len(futures):
