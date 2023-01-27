@@ -6,7 +6,7 @@ import json
 
 
 async def main():
-    num_proc = asyncio.Semaphore(value=3)
+    num_proc = asyncio.Semaphore(value=8)
 
     # downloads = utils.read_json_files()
     # download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
