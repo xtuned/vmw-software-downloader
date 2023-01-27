@@ -218,8 +218,8 @@ def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
     file = os.path.join(zpod_files_path, download.component_name, download.component_version,
                         download.component_download_file)
     if os.path.isfile(file):
-        console.print(f"[magenta]{download.component_download_file} [green] is done downloading")
-        return 
+        console.print(f"[magenta]{download.component_download_file} [green]is done downloading\n")
+        return
     if not os.path.exists(f"{file_path}.tmp"):
         return
     expected_size = round(convert_to_byte(download))
@@ -260,10 +260,10 @@ async def execute_download_cmd(download: ComponentDownload):
 async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphore):
     async with semaphore:
         if await check_if_file_exists(download):
-            console.print(f"[magenta]{download.component_download_file} [blue]already exists")
+            console.print(f"[magenta]{download.component_download_file} [blue]already exists \n")
             return
         if semaphore.locked():
-            console.print("Process limit is exceeded,waiting...", style="green")
+            console.print("Process limit is exceeded,waiting...\n", style="green")
             await asyncio.sleep(0.5)
         await execute_download_cmd(download=download)
         await rename_downloaded_file(download)
