@@ -215,9 +215,11 @@ async def remove_log_file():
 
 def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
     file_path = os.path.join(zpod_files_path, download.component_download_file)
-    if await check_if_file_exists(download):
+    file = os.path.join(zpod_files_path, download.component_name, download.component_version,
+                        download.component_download_file)
+    if os.path.isfile(file):
         console.print(f"[magenta]{download.component_download_file} [green] is done downloading")
-        return
+        return 
     if not os.path.exists(f"{file_path}.tmp"):
         return
     expected_size = round(convert_to_byte(download))
