@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from rich.console import Console
 from typing import Optional
 from dotenv import load_dotenv
-
+from vmw.log import logger
 from rich.progress import (
     BarColumn,
     Progress,
@@ -215,8 +215,8 @@ async def execute_download_cmd(download: ComponentDownload):
     )
     stdout, stderr = await cmd.communicate()
     # log this to file
-    print(stdout.decode())
-    print(stderr.decode())
+    logger.info(stdout.decode())
+    logger.error(stderr.decode())
     if await cmd.wait():
         console.print(f"{download.component_download_file} download done \n", style="green")
     else:
