@@ -208,6 +208,7 @@ async def execute_download_cmd(download: ComponentDownload):
     os.makedirs(os.path.join(zpod_files_path, "logs"), mode=0o775, exist_ok=True)
     download_cmd = f'''vcc download -a -p {download.component_download_product} -s {download.component_download_subproduct} -v {download.component_version} -f {download.component_download_file} -o {zpod_files_path} & '''
     console.print(f"Initiating {download.component_download_file} ...\n", style="green")
+    print(download_password)
     cmd = await asyncio.create_subprocess_shell(
         cmd=download_cmd,
         stdout=asyncio.subprocess.PIPE,
