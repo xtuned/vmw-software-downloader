@@ -68,8 +68,7 @@ async def verify_checksum(download: ComponentDownload):
     console.print(f"Verifying the checksum...\n", style="green")
     checksum_engine = download.component_download_file_checksum.split(":")[0]
     expected_checksum = download.component_download_file_checksum.split(":")[1]
-    file_path = os.path.join(zpod_files_path, download.component_name, download.component_version,
-                             download.component_download_file)
+    file_path = os.path.join(zpod_files_path, download.component_download_file)
     with open(file_path, "rb") as f:
         bytes_read = f.read()
         match checksum_engine:
@@ -78,7 +77,7 @@ async def verify_checksum(download: ComponentDownload):
             case "sha256":
                 checksum = hashlib.sha256(bytes_read).hexdigest()
             case "sha1":
-                checksum = hashlib.sha256(bytes_read).hexdigest()
+                checksum = hashlib.sha1(bytes_read).hexdigest()
         checksum_result = checksum
         if not checksum_result == expected_checksum:
             return False
@@ -115,46 +114,10 @@ async def get_download_status(download: ComponentDownload):
         return False
 
 
-# async def run_docker(download: ComponentDownload):
-#     # ensure the specified volume exists
-#     os.makedirs(zpod_files_path, mode=0o775, exist_ok=True)
-#     os.makedirs(os.path.join(zpod_files_path, "logs"), mode=0o775, exist_ok=True)
-#     log_file = f"/files/logs/{download.component_download_file}.log 2>&1"
-#     try:
-#         if download.component_download_group and download.component_download_category:
-#             cmd_options = f"{download.component_download_category} {download.component_download_group}"
-#         else:
-#             cmd_options = f"{download.component_download_category}"
-#
-#         entrypoint = f"/bin/sh -c 'vmw-cli ls {cmd_options} && vmw-cli cp {download.component_download_file} > {log_file}'"
-#         console.print(entrypoint)
-#         console.print("launching container ...", style="green")
-#         container = client.containers.run(image=download_container_image,
-#                                           detach=True,
-#                                           tty=True,
-#                                           entrypoint=entrypoint,
-#                                           volumes=[f"{zpod_files_path}:/files"],
-#                                           environment=[f"VMWUSER={download_username}", f"VMWPASS={download_password}"],
-#                                           auto_remove=True,
-#                                           )
-#         console.print(f"container {container.id[:10]} launched successfully", style="green")
-#     except docker.errors.ContainerError:
-#         console.print("Error launching the container", style="danger")
-#         sys.exit()
-#     except docker.errors.ImageNotFound:
-#         console.print("The specified image cannot be found", style="danger")
-#         sys.exit()
-#     except docker.errors.APIError:
-#         console.print("Error, cannot connect to docker engine. Make sure docker is running", style="danger")
-#         sys.exit()
-
-
 async def check_if_file_exists(download: ComponentDownload):
-    file = os.path.join(zpod_files_path, download.component_name, download.component_version,
-                        download.component_download_file)
+    file = os.path.join(zpod_files_path, download.component_download_file)
     if not os.path.isfile(file):
         return False
-    # await verify_checksum(download)
     return True
 
 
@@ -218,7 +181,7 @@ def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
     file = os.path.join(zpod_files_path, download.component_name, download.component_version,
                         download.component_download_file)
     if os.path.isfile(file):
-        console.print(f"[magenta]{download.component_download_file} [green]is done downloading\n")
+        console.print(f"\t[magenta]{download.component_download_file} [green]is done downloading\n")
         return
     if not os.path.exists(f"{file_path}.tmp"):
         return
@@ -251,10 +214,13 @@ async def execute_download_cmd(download: ComponentDownload):
         env=runtime_env
     )
     stdout, stderr = await cmd.communicate()
+    # log this to file
     print(stdout.decode())
     print(stderr.decode())
-    await cmd.wait()
-    console.print(f"{download.component_download_file} download done \n", style="green")
+    if await cmd.wait():
+        console.print(f"{download.component_download_file} download done \n", style="green")
+    else:
+        return
 
 
 async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphore):
@@ -264,10 +230,9 @@ async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphor
             return
         if semaphore.locked():
             console.print("Process limit is exceeded,waiting...\n", style="green")
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.1)
         await execute_download_cmd(download=download)
-        await rename_downloaded_file(download)
         if await check_if_file_exists(download):
             await verify_checksum(download)
-            return True
+            await rename_downloaded_file(download)
     return True
