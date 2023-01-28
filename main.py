@@ -1,8 +1,11 @@
 import asyncio
 from vmw import utils
+from dotenv import load_dotenv
 from vmw.log import logger
 from downloads import DOWNLOAD_REQUEST
 import json
+
+load_dotenv()
 
 
 async def main():

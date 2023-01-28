@@ -1,8 +1,6 @@
-import re
+
 import json
-import sys
 import time
-import subprocess
 import docker
 import asyncio
 import os
@@ -11,7 +9,7 @@ import hashlib
 from pydantic import BaseModel
 from rich.console import Console
 from typing import Optional
-from dotenv import load_dotenv
+
 from vmw.log import logger
 from rich.progress import (
     BarColumn,
@@ -28,8 +26,6 @@ progress = Progress(
 )
 
 # load env
-load_dotenv()
-
 download_username = os.getenv('USERNAME')
 download_password = os.getenv('PASSWORD')
 download_container_image = os.getenv("CONTAINER_IMAGE")
