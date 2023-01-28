@@ -29,6 +29,7 @@ progress = Progress(
 
 # load env
 load_dotenv()
+
 download_username = os.getenv('USERNAME')
 download_password = os.getenv('PASSWORD')
 download_container_image = os.getenv("CONTAINER_IMAGE")
@@ -215,8 +216,9 @@ async def execute_download_cmd(download: ComponentDownload):
     )
     stdout, stderr = await cmd.communicate()
     # log this to file
-    logger.info(stdout.decode())
-    logger.error(stderr.decode())
+    # logger.info(stdout.decode())
+    # logger.error(stderr.decode())
+    print(runtime_env)
     if await cmd.wait():
         console.print(f"{download.component_download_file} download done \n", style="green")
     else:
