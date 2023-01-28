@@ -220,6 +220,7 @@ async def execute_download_cmd(download: ComponentDownload):
     if await cmd.wait():
         console.print(f"{download.component_download_file} download done \n", style="green")
     else:
+        console.print(f"Unable to download {download.component_download_file}\n", style="white on red")
         return
 
 
