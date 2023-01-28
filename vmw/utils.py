@@ -216,9 +216,8 @@ async def execute_download_cmd(download: ComponentDownload):
     )
     stdout, stderr = await cmd.communicate()
     # log this to file
-    # logger.info(stdout.decode())
-    # logger.error(stderr.decode())
-    print(runtime_env)
+    logger.info(stdout.decode())
+    logger.error(stderr.decode())
     if await cmd.wait():
         console.print(f"{download.component_download_file} download done \n", style="green")
     else:
