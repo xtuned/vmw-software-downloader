@@ -9,8 +9,11 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+log_file_dir = Path(f"{os.getenv('BASE_DIR')}/logs")
 log_file = Path(f"{os.getenv('BASE_DIR')}/logs/download.log")
-log_file.mkdir(parents=True, mode=0o775, exist_ok=True)
+
+log_file_dir.mkdir(parents=True, mode=0o775, exist_ok=True)
+
 file_handler = logging.FileHandler(filename=str(log_file))
 
 file_handler.setLevel(logging.DEBUG)
