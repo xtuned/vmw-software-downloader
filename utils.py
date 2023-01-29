@@ -173,6 +173,7 @@ async def execute_download_cmd(download: ComponentDownload):
         cmd=download_cmd,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
+        env=runtime_env
     )
     stdout, stderr = await cmd.communicate()
     # log this to file
