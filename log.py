@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -7,7 +8,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-file_handler = logging.FileHandler(filename=os.path.join(os.getenv('BASE_DIR'), "logs", "download.log"))
+log_file = Path(f"{os.getenv('BASE_DIR')}/logs/download.log")
+file_handler = logging.FileHandler(filename=str(log_file))
 
 file_handler.setLevel(logging.DEBUG)
 
