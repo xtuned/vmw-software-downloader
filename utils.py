@@ -156,20 +156,18 @@ def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
 
 
 async def execute_download_cmd(download: ComponentDownload):
-    # runtime_env = dict(os.environ)
-    # runtime_env["VCC_USER"] = download_username
-    # runtime_env["VCC_PASS"] = download_password
+    runtime_env = dict(os.environ)
+    runtime_env["VCC_USER"] = download_username
+    runtime_env["VCC_PASS"] = download_password
     # ensure the specified volume exists
     logs = Path(f"{zpod_files_path}/logs")
     logs.mkdir(parents=True, mode=0o775, exist_ok=True)
     download_cmd = f'''
-    vcc download -a 
-    -p {download.component_download_product} 
-    -s {download.component_download_subproduct} -v {download.component_version} 
-    -f {download.component_download_file} -o {zpod_files_path}
-    --user {download_username} 
-    --pass {download_password}
-    &'''
+    vcc download -a \
+    -p {download.component_download_product} \
+    -s {download.component_download_subproduct} -v {download.component_version} \
+    -f {download.component_download_file} -o {zpod_files_path} &
+    '''
     console.print(f"Initiating {download.component_download_file} ...\n", style="green")
     cmd = await asyncio.create_subprocess_shell(
         cmd=download_cmd,
