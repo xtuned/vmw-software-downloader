@@ -80,9 +80,10 @@ async def wait_for_file(filename: str):
 
 
 async def check_if_file_exists(filename: str):
-    if not Path(filename).is_file() and Path(filename).exists():
+    if not Path(filename).exists():
         return False
-    return True
+    else:
+        return True
 
 
 async def get_download_status(download: ComponentDownload):
