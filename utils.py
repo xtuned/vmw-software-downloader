@@ -2,7 +2,7 @@ import json
 import time
 import asyncio
 import os
-import shutil
+import shlex
 import hashlib
 from pathlib import Path
 from pydantic import BaseModel
@@ -162,43 +162,40 @@ async def execute_download_cmd(download: ComponentDownload):
     # ensure the specified volume exists
     logs = Path(f"{zpod_files_path}/logs")
     logs.mkdir(parents=True, mode=0o775, exist_ok=True)
-    download_cmd = f'''
-    vcc download -a \
-    -p {download.component_download_product} \
-    -s {download.component_download_subproduct} -v {download.component_version} \
-    -f {download.component_download_file} -o {zpod_files_path} &
-    '''
+    cmd = f"vcc download -a -p {shlex.quote(download.component_download_product)} -s {shlex.quote(download.component_download_subproduct)} -v {shlex.quote(download.component_version)} -f {shlex.quote(download.component_download_file)} -o {shlex.quote(zpod_files_path)}"
     console.print(f"Initiating {download.component_download_file} ...\n", style="green")
-    cmd = await asyncio.create_subprocess_shell(
-        cmd=download_cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-        env=runtime_env
-    )
-    stdout, stderr = await cmd.communicate()
-    # log this to file
-    logger.info(stdout.decode())
-    logger.error(stderr.decode())
-    if await cmd.wait():
+    try:
+        process = await asyncio.create_subprocess_shell(
+            cmd=cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=runtime_env
+        )
+        stdout, stderr = await process.communicate()
+        logger.info(stdout.decode())
+        if process.returncode != 0:
+            logger.error(f"{stderr.decode()}")
+            console.print(f"Unable to download {download.component_download_file}\n", style="white on red")
+            return 1
         console.print(f"{download.component_download_file} download done \n", style="green")
-    else:
-        console.print(f"Unable to download {download.component_download_file}\n", style="white on red")
-        return
+        return 0
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return 2
 
 
 async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphore):
     async with semaphore:
-        dst_file = Path(
-            f"{zpod_files_path}/{download.component_name}/{download.component_version}/{download.component_download_file}")
-        tmp_file = Path(f"{zpod_files_path}/{download.component_download_file}")
+        dst_file = Path(f"{zpod_files_path}/{download.component_name}/{download.component_version}/{download.component_download_file}")
         if await check_if_file_exists(str(dst_file)):
             console.print(f"[magenta]{download.component_download_file} [blue]already exists \n")
             return
-        if semaphore.locked():
-            console.print("Process limit is exceeded,waiting...\n", style="green")
-            await asyncio.sleep(0.1)
         await execute_download_cmd(download=download)
+        tmp_file = Path(f"{zpod_files_path}/{download.component_download_file}")
         if await check_if_file_exists(str(tmp_file)):
             await verify_checksum(download)
             await rename_downloaded_file(download)
     return True
+
+
+
