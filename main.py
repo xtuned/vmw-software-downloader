@@ -2,7 +2,7 @@ import asyncio
 import os
 import utils
 from dotenv import load_dotenv
-from log import logger
+
 
 # from downloads import DOWNLOAD_REQUEST
 # import json
