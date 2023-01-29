@@ -7,8 +7,8 @@ import hashlib
 from pydantic import BaseModel
 from rich.console import Console
 from typing import Optional
-from vmw.log import logger
-from ..main import download_password,download_username,zpod_files_path
+from log import logger
+from main import download_password, download_username, zpod_files_path
 from rich.progress import (
     BarColumn,
     Progress,

@@ -1,7 +1,6 @@
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from vmw import utils
-from constants import DOWNLOAD_REQUEST
+import utils
 
 
 def main():

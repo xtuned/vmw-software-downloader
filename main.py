@@ -1,8 +1,8 @@
 import asyncio
 import os
-from vmw import utils
+import utils
 from dotenv import load_dotenv
-from vmw.log import logger
+from log import logger
 
 # from downloads import DOWNLOAD_REQUEST
 # import json
