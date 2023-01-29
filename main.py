@@ -1,11 +1,18 @@
 import asyncio
+import os
 from vmw import utils
 from dotenv import load_dotenv
 from vmw.log import logger
-from downloads import DOWNLOAD_REQUEST
-import json
+
+# from downloads import DOWNLOAD_REQUEST
+# import json
 
 load_dotenv()
+
+# load env
+download_username = os.getenv('USERNAME')
+download_password = os.getenv('PASSWORD')
+zpod_files_path = os.getenv("BASE_DIR")
 
 
 async def main():
@@ -16,7 +23,7 @@ async def main():
     tasks = [asyncio.create_task(utils.download_file(download, num_proc)) for download in download_requests]
     for future in asyncio.as_completed(tasks):
         if await future:
-            print("Done")
+            logger.info("Done")
 
 
 if __name__ == "__main__":

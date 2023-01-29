@@ -1,7 +1,5 @@
-
 import json
 import time
-import docker
 import asyncio
 import os
 import shutil
@@ -9,8 +7,8 @@ import hashlib
 from pydantic import BaseModel
 from rich.console import Console
 from typing import Optional
-
 from vmw.log import logger
+from ..main import download_password,download_username,zpod_files_path
 from rich.progress import (
     BarColumn,
     Progress,
@@ -25,13 +23,6 @@ progress = Progress(
     TimeElapsedColumn()
 )
 
-# load env
-download_username = os.getenv('USERNAME')
-download_password = os.getenv('PASSWORD')
-download_container_image = os.getenv("CONTAINER_IMAGE")
-zpod_files_path = os.getenv("BASE_DIR")
-
-client = docker.from_env()
 console = Console()
 
 byte_size = 1024
