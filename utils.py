@@ -4,6 +4,7 @@ import asyncio
 import os
 import shlex
 import hashlib
+import re
 from pathlib import Path
 from pydantic import BaseModel
 from rich.console import Console
@@ -52,6 +53,10 @@ def convert_to_byte(download: ComponentDownload):
     unit = download.component_download_file_size.split(" ")[1].upper()
     return size * (byte_size ** powers[unit])
 
+
+def replace_special_char_password(password: str):
+    special_chars = r'([$!#&"()|<>`\;' + "'])"
+    return re.sub(special_chars, r'@\1', password).replace('@','\\')
 
 async def verify_checksum(download: ComponentDownload):
     console.print(f"Verifying the checksum...\n", style="green")
@@ -156,23 +161,31 @@ def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
 
 
 async def execute_download_cmd(download: ComponentDownload):
-    runtime_env = dict(os.environ)
-    runtime_env["VCC_USER"] = download_username
-    runtime_env["VCC_PASS"] = download_password
-    # ensure the specified volume exists
+    user_password = replace_special_char_password(download_password)
     logs = Path(f"{zpod_files_path}/logs")
     logs.mkdir(parents=True, mode=0o775, exist_ok=True)
-    cmd = f"vcc download -a -p {shlex.quote(download.component_download_product)} -s {shlex.quote(download.component_download_subproduct)} -v {shlex.quote(download.component_version)} -f {shlex.quote(download.component_download_file)} -o {shlex.quote(zpod_files_path)}"
+    # cmd = f"vcc download -a \
+    #      --user {shlex.quote(download_username)} --pass {shlex.quote(user_password)} \
+    #      -p {shlex.quote(download.component_download_product)} \
+    #      -s {shlex.quote(download.component_download_subproduct)} \
+    #      -v {shlex.quote(download.component_version)} \
+    #      -f {shlex.quote(download.component_download_file)} \
+    #      -o {shlex.quote(zpod_files_path)}"
+   
+    cmd = f"vcc download -a --user {shlex.quote(download_username)} --pass {shlex.quote(user_password)} -p {shlex.quote(download.component_download_product)} -s {shlex.quote(download.component_download_subproduct)} -v {shlex.quote(download.component_version)} -f {shlex.quote(download.component_download_file)} -o {shlex.quote(zpod_files_path)}"
     console.print(f"Initiating {download.component_download_file} ...\n", style="green")
     try:
         process = await asyncio.create_subprocess_shell(
             cmd=cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=runtime_env
         )
-        stdout, stderr = await process.communicate()
+        # stdout, stderr = await process.communicate()
+        await process.wait()
         logger.info(stdout.decode())
+        print(stdout.decode())
+        print(process.returncode)
+        print(cmd)
         if process.returncode != 0:
             logger.error(f"{stderr.decode()}")
             console.print(f"Unable to download {download.component_download_file}\n", style="white on red")
@@ -199,3 +212,4 @@ async def download_file(download: ComponentDownload, semaphore: asyncio.Semaphor
 
 
 
+ 
