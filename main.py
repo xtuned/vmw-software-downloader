@@ -15,11 +15,14 @@ download_password = os.getenv('PASSWORD')
 zpod_files_path = os.getenv("BASE_DIR")
 
 async def main():
-    num_proc = asyncio.Semaphore(value=8)
+    num_proc = asyncio.Semaphore(value=5)
 
     downloads = utils.read_json_files()
     download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
-    tasks = [asyncio.create_task(utils.download_file(download, num_proc)) for download in download_requests]
+    tasks = []
+    for download in download_requests:
+        tasks.append(asyncio.create_task(utils.download_file(download, num_proc)))
+        await asyncio.sleep(.3)
     for future in asyncio.as_completed(tasks):
         if await future:
             logger.info("Done")

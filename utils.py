@@ -161,18 +161,18 @@ def show_progress(download: ComponentDownload, task_id: TaskID, status: dict):
 
 
 async def execute_download_cmd(download: ComponentDownload):
-    user_password = replace_special_char_password(download_password)
+    # user_password = replace_special_char_password(download_password)
     logs = Path(f"{zpod_files_path}/logs")
     logs.mkdir(parents=True, mode=0o775, exist_ok=True)
-    # cmd = f"vcc download -a \
-    #      --user {shlex.quote(download_username)} --pass {shlex.quote(user_password)} \
-    #      -p {shlex.quote(download.component_download_product)} \
-    #      -s {shlex.quote(download.component_download_subproduct)} \
-    #      -v {shlex.quote(download.component_version)} \
-    #      -f {shlex.quote(download.component_download_file)} \
-    #      -o {shlex.quote(zpod_files_path)}"
+    cmd = f"vcc download -a \
+         --user {shlex.quote(download_username)} --pass {shlex.quote(download_password)} \
+         -p {shlex.quote(download.component_download_product)} \
+         -s {shlex.quote(download.component_download_subproduct)} \
+         -v {shlex.quote(download.component_version)} \
+         -f {shlex.quote(download.component_download_file)} \
+         -o {shlex.quote(zpod_files_path)}"
    
-    cmd = f"vcc download -a --user {shlex.quote(download_username)} --pass {shlex.quote(user_password)} -p {shlex.quote(download.component_download_product)} -s {shlex.quote(download.component_download_subproduct)} -v {shlex.quote(download.component_version)} -f {shlex.quote(download.component_download_file)} -o {shlex.quote(zpod_files_path)}"
+    #cmd = f"vcc download -a --user {shlex.quote(download_username)} --pass {shlex.quote(download_password)} -p {shlex.quote(download.component_download_product)} -s {shlex.quote(download.component_download_subproduct)} -v {shlex.quote(download.component_version)} -f {shlex.quote(download.component_download_file)} -o {shlex.quote(zpod_files_path)}"
     console.print(f"Initiating {download.component_download_file} ...\n", style="green")
     try:
         process = await asyncio.create_subprocess_shell(
@@ -180,8 +180,8 @@ async def execute_download_cmd(download: ComponentDownload):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        # stdout, stderr = await process.communicate()
-        await process.wait()
+        await asyncio.sleep(.2)
+        stdout, stderr = await process.communicate()
         logger.info(stdout.decode())
         print(stdout.decode())
         print(process.returncode)
