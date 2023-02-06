@@ -1,3 +1,7 @@
+[[tool.poetry.source]]
+name = 'pypi_'  # needed until python-poetry/poetry#3456 is resolved.
+url = 'https://pypi.org/simple'
+secondary = false
 [tool.poetry]
 name = "vmw-software-downloader"
 version = "0.1.0"
@@ -13,6 +17,9 @@ pydantic = "^1.10.4"
 docker = "^6.0.1"
 rich = "^13.0.1"
 python-dotenv = "^0.21.0"
+prefect-ray = "^0.2.2"
+greenlet = "^2.0.2"
+loguru = "^0.6.0"
 
 
 [build-system]

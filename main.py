@@ -1,32 +1,27 @@
-import asyncio
 import os
 import utils
+from prefect import flow
+from prefect.task_runners import ConcurrentTaskRunner
 from dotenv import load_dotenv
+from downloads import DOWNLOAD_REQUEST
 from log import logger
-
-# from downloads import DOWNLOAD_REQUEST
-# import json
 
 load_dotenv()
 
 # load env
-download_username = os.getenv('USERNAME')
-download_password = os.getenv('PASSWORD')
+download_username = os.getenv("USERNAME")
+download_password = os.getenv("PASSWORD")
 zpod_files_path = os.getenv("BASE_DIR")
 
-async def main():
-    num_proc = asyncio.Semaphore(value=5)
+download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
 
-    downloads = utils.read_json_files()
-    download_requests = [utils.ComponentDownload(**payload) for payload in downloads]
-    tasks = []
-    for download in download_requests:
-        tasks.append(asyncio.create_task(utils.download_file(download, num_proc)))
-        await asyncio.sleep(.3)
-    for future in asyncio.as_completed(tasks):
-        if await future:
-            logger.info("Done")
+
+@flow(task_runner=ConcurrentTaskRunner())
+def download(requests):
+    for request in requests:
+        proc = utils.download_file.submit(request)
+        utils.check_status(request, proc.result(), )
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    download(download_requests)
