@@ -18,9 +18,7 @@ download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_
 
 @flow(task_runner=ConcurrentTaskRunner())
 def download(requests):
-    for request in requests:
-        proc = utils.download_file.submit(request)
-        utils.check_status(request, proc.result(), )
+    utils.download_file.map(requests)
 
 
 if __name__ == "__main__":

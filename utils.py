@@ -201,7 +201,6 @@ def execute_vcc_cmd(download: ComponentDownload):
     return vcc
 
 
-@task()
 def check_status(download: ComponentDownload, process: subprocess.Popen):
     if not process:
         logger.info("Received None process object: Possible reasons file already exists or failed to execute the cmd")
@@ -228,7 +227,7 @@ def download_file(download: ComponentDownload):
         console.print(f"[magenta]{download.component_download_file} [blue]already exists \n")
         return
     proc = execute_vcc_cmd(download=download)
-    return proc
+    check_status(download,proc)
     # if proc:
     #     return {"status": "SCHEDULED", "pid": proc.pid}
     # else:
