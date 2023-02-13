@@ -28,6 +28,20 @@ progress = Progress(
 )
 
 
+def read_json_files():
+    base_dir = os.path.join(os.getenv("BASE_DIR"), "../zPodLibrary/official")
+    all_json_files = []
+    for subdir, dirs, files in os.walk(base_dir):
+        for file in files:
+            if file.endswith('.json'):
+                all_json_files.append(os.path.join(subdir, file))
+    json_contents = []
+    for json_file in all_json_files:
+        with open(json_file) as f:
+            json_contents.append(json.load(f))
+    return json_contents
+
+
 class ComponentDownload(BaseModel):
     component_name: str
     component_version: str
@@ -73,7 +87,7 @@ class DownloadHelper:
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        print("D",d)
+        print("D", d)
         del d['executor']
         del d['futures']
         del d['shared_array']
@@ -146,20 +160,7 @@ class DownloadHelper:
         if self.dst_file.exists():
             logger.info(f"File {self.component_download.component_download_file} renamed successfully")
 
-    def read_json_files(self):
-        base_dir = os.path.join(self.zpod_files_path, "../zPodLibrary/official")
-        all_json_files = []
-        for subdir, dirs, files in os.walk(base_dir):
-            for file in files:
-                if file.endswith('.json'):
-                    all_json_files.append(os.path.join(subdir, file))
-        json_contents = []
-        for json_file in all_json_files:
-            with open(json_file) as f:
-                json_contents.append(json.load(f))
-        return json_contents
-
-    def show_progress(self,task_id: TaskID, status: dict):
+    def show_progress(self, task_id: TaskID, status: dict):
         if self.dst_file.exists():
             logger.info(f"{self.component_download.component_download_file} is done downloading")
             return

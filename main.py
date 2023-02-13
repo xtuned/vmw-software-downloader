@@ -1,12 +1,9 @@
-import os
 import vcc
 from prefect import flow, task
 from prefect.task_runners import ConcurrentTaskRunner
-from dotenv import load_dotenv
-from downloads import DOWNLOAD_REQUEST
-from log import logger
-
-download_requests = [vcc.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
+# from downloads import DOWNLOAD_REQUEST
+all_requests = vcc.read_json_files()
+download_requests = [vcc.ComponentDownload(**payload) for payload in all_requests]
 
 
 @task(retries=5, retry_delay_seconds=10)
