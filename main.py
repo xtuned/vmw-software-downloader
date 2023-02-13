@@ -1,25 +1,24 @@
 import os
-import utils
-from prefect import flow
+import vcc
+from prefect import flow, task
 from prefect.task_runners import ConcurrentTaskRunner
 from dotenv import load_dotenv
 from downloads import DOWNLOAD_REQUEST
 from log import logger
 
-load_dotenv()
+download_requests = [vcc.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
 
-# load env
-download_username = os.getenv("USERNAME")
-download_password = os.getenv("PASSWORD")
-zpod_files_path = os.getenv("BASE_DIR")
 
-download_requests = [utils.ComponentDownload(**payload) for payload in DOWNLOAD_REQUEST]
+@task(retries=5, retry_delay_seconds=10)
+def download_task(request):
+    download_helper = vcc.DownloadHelper(request)
+    download_helper.download_file()
 
 
 @flow(task_runner=ConcurrentTaskRunner())
-def download(requests):
-    utils.download_file.map(requests)
+def download_files(requests):
+    download_task.map(requests)
 
 
 if __name__ == "__main__":
-    download(download_requests)
+    download_files(download_requests)
